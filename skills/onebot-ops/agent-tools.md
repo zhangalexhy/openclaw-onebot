@@ -151,8 +151,39 @@ openclaw onebot group-admin --action set_group_kick --group-id 123456789 --user-
 
 ---
 
+## 8. 通用 API 调用（onebot_api）
+
+**Agent 工具**：`onebot_api`
+
+直接调用任意 OneBot/NapCat API，无需逐个封装。传入 `action`（API 端点名）和 `params`（参数对象），返回完整 JSON 响应。
+
+适用于上述专用工具未覆盖的 API（如群相册、精华消息、群文件管理、戳一戳、AI 语音等）。
+
+| 参数 | 说明 |
+|------|------|
+| `action` | OneBot API 名称，如 `get_group_list`、`set_essence_msg` |
+| `params` | API 参数对象，字段与 OneBot 协议文档一致 |
+| `timeout` | 可选，超时毫秒数，默认 15000 |
+
+示例：
+
+```json
+// 获取群精华消息
+{ "action": "get_essence_msg_list", "params": { "group_id": 123456 } }
+
+// 群戳一戳
+{ "action": "group_poke", "params": { "user_id": 789012 } }
+
+// 获取群文件列表
+{ "action": "get_group_root_files", "params": { "group_id": 123456 } }
+```
+
+完整 API 列表参考：[napcat-api-reference.md](napcat-api-reference.md)
+
+---
+
 ## 使用建议
 
-- **AI / 自动化**：优先使用上述 **CLI 命令**，便于在 Skill 中写明「如何调用」、可复现。
-- **Cron / 内置任务**：在 `openclaw.json` 的 `cronJobs` 中配置 `script`，脚本内通过 `onebotClient` 或子进程调用 CLI。
+- **AI / 自动化**：优先使用上述 **CLI 命令**，便于在 Skill 中写明「如何调用」、可复现。对于专用工具未覆盖的 API，使用 `onebot_api` 通用工具。
+- **Cron / 内置任务**：在 `openclaw.json` 的 `cronJobs` 中配置 `script`，脚本内通过 `onebotClient.callApi(action, params)` 或子进程调用 CLI。
 - **临时查询**：直接运行 `openclaw onebot search-group-member ...` 等。

@@ -7,6 +7,7 @@ import WebSocket from "ws";
 import { loadScript } from "./load-script.js";
 import {
   getWs,
+  sendOneBotAction,
   sendPrivateMsg,
   sendGroupMsg,
   sendGroupImage,
@@ -36,6 +37,8 @@ import { getRenderMarkdownToPlain } from "./config.js";
 import { markdownToPlain } from "./markdown.js";
 
 export interface OneBotClient {
+  /** 通用 API 调用：传入 action 名和参数，直接发送到 OneBot */
+  callApi: (action: string, params?: Record<string, unknown>) => Promise<any>;
   sendGroupMsg: typeof sendGroupMsg;
   sendGroupImage: typeof sendGroupImage;
   sendPrivateMsg: typeof sendPrivateMsg;
@@ -60,6 +63,11 @@ export interface OneBotClient {
 }
 
 export const onebotClient: OneBotClient = {
+  callApi: async (action: string, params?: Record<string, unknown>) => {
+    const w = getWs();
+    if (!w || w.readyState !== WebSocket.OPEN) throw new Error("OneBot 未连接");
+    return sendOneBotAction(w, action, params ?? {});
+  },
   sendGroupMsg,
   sendGroupImage,
   sendPrivateMsg,
@@ -393,6 +401,65 @@ export function registerTools(api: any): void {
         return { content: [{ type: "text", text: out }] };
       } catch (e: any) {
         return { content: [{ type: "text", text: `脚本执行失败: ${e?.message}` }] };
+      }
+    },
+  });
+
+  // ── 通用 OneBot API 代理工具 ──────────────────────────
+  api.registerTool({
+    name: "onebot_api",
+    description: `通用 OneBot API 调用。直接传入 OneBot action 名称和参数，无需逐个封装。
+支持 OneBot v11 标准 API 及 NapCat/Lagrange 扩展 API。
+action 即 OneBot 协议的 API 端点名（如 send_group_msg、get_group_list、set_group_ban 等），
+params 为该 API 的参数对象，字段与 OneBot 协议文档一致。
+返回 OneBot 响应的完整 JSON（含 retcode、data 等）。
+
+常用 action 示例：
+- get_login_info: 获取登录号信息（无参数）
+- get_group_list: 获取群列表（无参数）
+- get_friend_list: 获取好友列表（无参数）
+- get_group_member_list: { group_id }
+- get_group_member_info: { group_id, user_id }
+- send_group_msg: { group_id, message }
+- send_private_msg: { user_id, message }
+- send_group_forward_msg: { group_id, messages }
+- set_group_ban: { group_id, user_id, duration }
+- set_group_card: { group_id, user_id, card }
+- set_friend_add_request: { flag, approve }
+- set_group_add_request: { flag, sub_type, approve }
+- get_stranger_info: { user_id }
+- get_msg: { message_id }
+- delete_msg: { message_id }
+- .can_send_image / .can_send_record: 检查能力
+- NapCat 扩展: get_group_file_list, get_group_root_files, mark_msg_as_read 等
+
+完整 API 列表参考 NapCat 文档或 OneBot v11 协议。`,
+    parameters: {
+      type: "object",
+      properties: {
+        action: { type: "string", description: "OneBot API action 名称，如 get_group_list、send_group_msg" },
+        params: {
+          type: "object",
+          description: "API 参数对象，字段与 OneBot 协议文档一致",
+          additionalProperties: true,
+        },
+        timeout: { type: "number", description: "超时毫秒数，默认 15000" },
+      },
+      required: ["action"],
+    },
+    async execute(_id: string, args: { action: string; params?: Record<string, unknown>; timeout?: number }) {
+      const w = getWs();
+      if (!w || w.readyState !== WebSocket.OPEN) {
+        return { content: [{ type: "text", text: "OneBot 未连接" }] };
+      }
+      try {
+        const res = await sendOneBotAction(w, args.action, args.params ?? {}, undefined, args.timeout ?? 15000);
+        return {
+          content: [{ type: "text", text: JSON.stringify(res, null, 2) }],
+          metadata: { retcode: res?.retcode, action: args.action },
+        };
+      } catch (e: any) {
+        return { content: [{ type: "text", text: `API 调用失败: ${e?.message}` }] };
       }
     },
   });

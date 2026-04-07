@@ -197,7 +197,7 @@ function getLogger(): { info?: (s: string) => void; warn?: (s: string) => void }
     return (globalThis as any).__onebotApi?.logger ?? {};
 }
 
-function sendOneBotAction(wsocket: WebSocket, action: string, params: Record<string, unknown>, log = getLogger(), timeoutMs = 15000): Promise<any> {
+export function sendOneBotAction(wsocket: WebSocket, action: string, params: Record<string, unknown>, log = getLogger(), timeoutMs = 15000): Promise<any> {
     const echo = nextEcho();
     const payload = { action, params, echo };
 

@@ -65,6 +65,7 @@ openclaw plugins install ./openclaw-onebot
 插件提供群历史、按名字搜 QQ 等能力，既注册为 **Agent 工具**（供 Cron/脚本/AI 调用），也提供等价的 **CLI 命令**，便于 AI 与人工按文档调用。
 
 **详细说明与所有命令用法见：[agent-tools.md](agent-tools.md)**
+**NapCat 完整 API 参考（供 onebot_api 工具使用）：[napcat-api-reference.md](napcat-api-reference.md)**
 
 ### 常用 CLI 一览
 
