@@ -1,20 +1,20 @@
 {
-  "name": "@kirigaya/openclaw-onebot",
-  "version": "1.1.0",
+  "name": "@zhangalexhy/openclaw-onebot",
+  "version": "1.0.0",
   "description": "OneBot v11 protocol channel plugin for OpenClaw (QQ/Lagrange.Core/go-cqhttp)",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
-  "author": "LSTM-Kirigaya",
+  "author": "zhangalexhy",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LSTM-Kirigaya/openclaw-onebot.git"
+    "url": "https://github.com/zhangalexhy/openclaw-onebot.git"
   },
   "bugs": {
-    "url": "https://github.com/LSTM-Kirigaya/openclaw-onebot/issues"
+    "url": "https://github.com/zhangalexhy/openclaw-onebot/issues"
   },
-  "homepage": "https://github.com/LSTM-Kirigaya/openclaw-onebot#readme",
+  "homepage": "https://github.com/zhangalexhy/openclaw-onebot#readme",
   "keywords": [
     "openclaw",
     "onebot",

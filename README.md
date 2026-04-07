@@ -4,8 +4,8 @@
 
 [OpenClaw](https://openclaw.ai)  的 **OneBot v11 协议**（QQ/Lagrange.Core、go-cqhttp 等）渠道插件。
 
-[![npm version](https://img.shields.io/npm/v/@kirigaya/openclaw-onebot?style=flat-square)](https://www.npmjs.com/package/@kirigaya/openclaw-onebot)
-[![GitHub stars](https://img.shields.io/github/stars/LSTM-Kirigaya/openclaw-onebot?style=flat-square)](https://github.com/LSTM-Kirigaya/openclaw-onebot)
+[![npm version](https://img.shields.io/npm/v/@zhangalexhy/openclaw-onebot?style=flat-square)](https://www.npmjs.com/package/@zhangalexhy/openclaw-onebot)
+[![GitHub stars](https://img.shields.io/github/stars/zhangalexhy/openclaw-onebot?style=flat-square)](https://github.com/zhangalexhy/openclaw-onebot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square)](https://www.typescriptlang.org/)
@@ -18,7 +18,7 @@
 ## 安装
 
 ```bash
-openclaw plugins install @kirigaya/openclaw-onebot
+openclaw plugins install @zhangalexhy/openclaw-onebot
 openclaw onebot setup
 ```
 
@@ -287,7 +287,7 @@ npm run test:render-og-image -- "C:/path/to/your-theme.css"
 
 - [OneBot 11](https://github.com/botuniverse/onebot-11)
 - [go-cqhttp](https://docs.go-cqhttp.org/)
-- [Lagrange.Core](https://github.com/LSTM-Kirigaya/Lagrange.Core)
+- [Lagrange.Core](https://github.com/LagrangeDev/Lagrange.Core)
 - [NapCat](https://github.com/NapNeko/NapCatQQ)
 
 ## 联系
@@ -298,4 +298,4 @@ zhelonghuang@qq.com
 
 ## License
 
-MIT © [LSTM-Kirigaya](https://github.com/LSTM-Kirigaya)
+MIT © [zhangalexhy](https://github.com/zhangalexhy)
