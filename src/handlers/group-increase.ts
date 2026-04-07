@@ -3,8 +3,11 @@
  *
  * 支持：
  * 1. 简单文本模板（message），占位符：{name}、{userId}、{groupName}、{groupId}、{avatarUrl}
- * 2. 自定义 command：在 cwd 下用系统 shell 执行命令，通过环境变量传入上下文
- *    命令自行负责发送（如调用 openclaw message send），或向 stdout 输出 JSON 行供本 handler 发送
+ * 2. 自定义脚本（script）：通过 loadScript 动态加载用户脚本，脚本导出 default/run/execute 函数
+ *    函数接收 GroupIncreaseContext，返回 GroupIncreaseResult（或 void）
+ *
+ * 注意：旧版 command 字段（shell 执行）已废弃，改用 script 字段（动态 import）以通过插件安全检查。
+ * 配置迁移：将 command + cwd 改为 script（脚本路径）+ cwd（可选）
  */
 
 import type { OneBotMessage } from "../types.js";
@@ -19,7 +22,7 @@ import {
 import { getRenderMarkdownToPlain } from "../config.js";
 import { markdownToPlain } from "../markdown.js";
 import { resolve } from "path";
-import { spawn } from "child_process";
+import { loadScript } from "../load-script.js";
 
 export interface GroupIncreaseContext {
     groupId: number;
@@ -66,57 +69,25 @@ function applyTemplate(template: string, ctx: GroupIncreaseContext): string {
         .replace(/\{avatarUrl\}/g, ctx.avatarUrl);
 }
 
-function escapeForShell(s: string): string {
-    const str = String(s);
-    if (process.platform === "win32") {
-        return '"' + str.replace(/"/g, '""') + '"';
+async function runScript(
+    scriptPath: string,
+    cwd: string | undefined,
+    ctx: GroupIncreaseContext,
+    logger?: any,
+): Promise<GroupIncreaseResult> {
+    const mod = await loadScript(scriptPath, { cwd });
+    const fn = mod?.default ?? mod?.run ?? mod?.execute;
+    if (typeof fn !== "function") {
+        logger?.error?.(`[onebot] groupIncrease script: 脚本未导出 default/run/execute 函数`);
+        return {};
     }
-    return '"' + str.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
-}
-
-function runCommand(
-    command: string,
-    cwd: string,
-    args: { userId: string; username: string; groupId: string },
-    env: Record<string, string>
-): Promise<{ stdout: string; stderr: string; code: number | null }> {
-    const fullCmd = `${command} --userId ${args.userId} --username ${escapeForShell(args.username)} --groupId ${args.groupId}`;
-
-    return new Promise((resolvePromise) => {
-        const isWin = process.platform === "win32";
-        const shell = isWin ? "cmd.exe" : "sh";
-        const shellArg = isWin ? "/c" : "-c";
-
-        const child = spawn(shell, [shellArg, fullCmd], {
-            cwd,
-            env: { ...process.env, ...env },
-            stdio: ["ignore", "pipe", "pipe"],
-        });
-
-        let stdout = "";
-        let stderr = "";
-        child.stdout?.on("data", (d) => { stdout += d.toString(); });
-        child.stderr?.on("data", (d) => { stderr += d.toString(); });
-
-        child.on("close", (code) => {
-            resolvePromise({ stdout, stderr, code });
-        });
-    });
-}
-
-function parseCommandOutput(stdout: string): GroupIncreaseResult | null {
-    const line = stdout.trim().split("\n").pop();
-    if (!line) return null;
-    try {
-        const data = JSON.parse(line) as Record<string, unknown>;
-        return {
-            text: typeof data.text === "string" ? data.text : undefined,
-            imagePath: typeof data.imagePath === "string" ? data.imagePath : undefined,
-            imageUrl: typeof data.imageUrl === "string" ? data.imageUrl : undefined,
-        };
-    } catch {
-        return null;
-    }
+    const raw = await fn(ctx);
+    if (!raw || typeof raw !== "object") return {};
+    return {
+        text: typeof raw.text === "string" ? raw.text : undefined,
+        imagePath: typeof raw.imagePath === "string" ? raw.imagePath : undefined,
+        imageUrl: typeof raw.imageUrl === "string" ? raw.imageUrl : undefined,
+    };
 }
 
 export async function handleGroupIncrease(api: any, msg: OneBotMessage): Promise<void> {
@@ -137,37 +108,19 @@ export async function handleGroupIncrease(api: any, msg: OneBotMessage): Promise
 
     let result: GroupIncreaseResult = {};
 
-    const command = (gi?.command as string | undefined)?.trim();
+    // 优先使用 script 字段（动态 import），兼容旧版 command 字段（也当作 script 路径处理）
+    const script = ((gi?.script ?? gi?.command) as string | undefined)?.trim();
     const cwd = (gi?.cwd as string | undefined)?.trim();
-    if (command && cwd) {
-        const env = {
-            GROUP_ID: String(ctx.groupId),
-            GROUP_NAME: ctx.groupName,
-            USER_ID: String(ctx.userId),
-            USER_NAME: ctx.userName,
-            AVATAR_URL: ctx.avatarUrl,
-        };
-        const args = {
-            userId: String(ctx.userId),
-            username: ctx.userName,
-            groupId: String(ctx.groupId),
-        };
+    if (script) {
         try {
-            const { stdout, stderr, code } = await runCommand(command, resolve(cwd), args, env);
-            if (stderr) api.logger?.warn?.(`[onebot] groupIncrease command stderr: ${stderr}`);
-            if (code !== 0) api.logger?.warn?.(`[onebot] groupIncrease command exit code: ${code}`);
-
-            const parsed = parseCommandOutput(stdout);
-            if (parsed && (parsed.text || parsed.imagePath || parsed.imageUrl)) {
-                result = parsed;
-            }
+            result = await runScript(script, cwd, ctx, api.logger);
         } catch (e: any) {
-            api.logger?.error?.(`[onebot] groupIncrease command failed: ${e?.message}`);
+            api.logger?.error?.(`[onebot] groupIncrease script failed: ${e?.message}`);
         }
     }
 
     const message = gi?.message as string | undefined;
-    if (message?.trim() && !result.text && !command) {
+    if (message?.trim() && !result.text && !script) {
         result.text = applyTemplate(message, ctx);
     }
 
