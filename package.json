@@ -37,6 +37,7 @@
     "extensions": [
       "./dist/index.js"
     ],
+    "hooks": [],
     "skills": [
       "skills/onebot-ops",
       "skills/onebot-scripts"
