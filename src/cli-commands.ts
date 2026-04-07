@@ -23,7 +23,11 @@ import {
   getGroupInfo,
   getGroupMemberList,
   getGroupMemberInfo,
+  stopConnection,
+  stopImageTempCleanup,
 } from "./connection.js";
+import { stopForwardCleanupTimer } from "./handlers/process-inbound.js";
+import { stopScheduler } from "./scheduler.js";
 
 function getApi(): any {
   return (globalThis as any).__onebotApi;
@@ -46,6 +50,15 @@ function parseGroupId(v: string): number {
     process.exit(1);
   }
   return n;
+}
+
+/** 清理所有异步资源，让 CLI 命令执行完后进程能正常退出 */
+function cleanupAndExit(code = 0): never {
+  stopConnection();
+  stopImageTempCleanup();
+  stopForwardCleanupTimer();
+  stopScheduler();
+  process.exit(code);
 }
 
 export function registerOneBotCli(onebot: any, api: any): void {
@@ -91,6 +104,8 @@ export function registerOneBotCli(onebot: any, api: any): void {
         return `[${new Date(m.time * 1000).toISOString()}] ${nick}: ${text.slice(0, 200)}`;
       });
       console.log(lines.join("\n") || "无历史消息");
+      cleanupAndExit();
+      cleanupAndExit();
     });
 
   onebot
@@ -109,9 +124,10 @@ export function registerOneBotCli(onebot: any, api: any): void {
       const list = await searchGroupMemberByName(groupId, name);
       if (list.length === 0) {
         console.log(`未找到匹配「${name}」的群成员`);
-        return;
+        cleanupAndExit();
       }
       list.forEach((m) => console.log(`QQ: ${m.user_id}  展示名: ${m.displayName}`));
+      cleanupAndExit();
     });
 
   onebot
@@ -140,6 +156,7 @@ export function registerOneBotCli(onebot: any, api: any): void {
         console.error("--target 格式须为 group:<群号> 或 user:<QQ号>");
         process.exit(1);
       }
+      cleanupAndExit();
     });
 
   onebot
@@ -235,6 +252,7 @@ export function registerOneBotCli(onebot: any, api: any): void {
         }
 
         console.log(JSON.stringify(result));
+        cleanupAndExit();
       } catch (err: any) {
         console.error(`错误: ${err?.message ?? err}`);
         process.exit(1);

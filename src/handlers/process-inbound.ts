@@ -92,6 +92,13 @@ export function startForwardCleanupTimer(): void {
     forwardCleanupTimer = setInterval(cleanupForwardPendingSessions, FORWARD_CLEANUP_INTERVAL_MS);
 }
 
+export function stopForwardCleanupTimer(): void {
+    if (forwardCleanupTimer) {
+        clearInterval(forwardCleanupTimer);
+        forwardCleanupTimer = null;
+    }
+}
+
 export async function processInboundMessage(api: any, msg: OneBotMessage): Promise<void> {
     await loadPluginSdk();
     const { buildPendingHistoryContextFromMap, recordPendingHistoryEntry, clearHistoryEntriesIfEnabled } = getSdk();
