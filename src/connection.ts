@@ -197,7 +197,7 @@ function getLogger(): { info?: (s: string) => void; warn?: (s: string) => void }
     return (globalThis as any).__onebotApi?.logger ?? {};
 }
 
-function sendOneBotAction(wsocket: WebSocket, action: string, params: Record<string, unknown>, log = getLogger()): Promise<any> {
+function sendOneBotAction(wsocket: WebSocket, action: string, params: Record<string, unknown>, log = getLogger(), timeoutMs = 15000): Promise<any> {
     const echo = nextEcho();
     const payload = { action, params, echo };
 
@@ -210,7 +210,7 @@ function sendOneBotAction(wsocket: WebSocket, action: string, params: Record<str
             pendingEcho.delete(echo);
             log.warn?.(`[onebot-trace] sendOneBotAction ${action} timeout for echo=${echo}, ws.readyState=${wsocket.readyState}`);
             reject(new Error(`OneBot action ${action} timeout (echo=${echo}, ws.readyState=${wsocket.readyState})`));
-        }, 15000);
+        }, timeoutMs);
 
         pendingEcho.set(echo, {
             resolve: (v) => {
@@ -802,7 +802,7 @@ export async function setGroupName(groupId: number, groupName: string): Promise<
 
 export async function sendGroupNotice(groupId: number, content: string): Promise<void> {
     if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
-    const res = await sendOneBotAction(ws, "_send_group_notice", { group_id: groupId, content });
+    const res = await sendOneBotAction(ws, "_send_group_notice", { group_id: groupId, content }, getLogger(), 30000);
     if (res?.retcode !== 0) {
         throw new Error(res?.msg ?? `OneBot _send_group_notice failed (retcode=${res?.retcode})`);
     }
