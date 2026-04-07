@@ -50,6 +50,15 @@ openclaw plugins install ./openclaw-onebot
 | **upload_group_file** | 上传群文件 |
 | **upload_private_file** | 上传私聊文件 |
 | **set_msg_emoji_like** | 表情回应（Lagrange/QQ NT 扩展） |
+| **set_group_name** | 修改群名 |
+| **set_group_ban** | 禁言/解禁成员 |
+| **set_group_whole_ban** | 全员禁言开关 |
+| **set_group_kick** | 踢出成员 |
+| **set_group_admin** | 设置/取消管理员 |
+| **set_group_card** | 设置群名片 |
+| **set_group_special_title** | 设置群头衔 |
+| **set_group_portrait** | 设置群头像 |
+| **_send_group_notice** | 发群公告（NapCat 扩展） |
 
 ## Agent 工具与 CLI
 
@@ -68,5 +77,6 @@ openclaw plugins install ./openclaw-onebot
 | `openclaw message send --channel onebot --target group:xxx --message "hi"` | 发送文本/图片 |
 | `openclaw gateway status` | 查看 Gateway 状态 |
 | `openclaw logs --follow` | 查看日志 |
+| `openclaw onebot group-admin --action <action> --group-id <群号> [...]` | 群管理操作（禁言/踢人/改群名等） |
 
 AI 或脚本需要「获取群历史、查群友 QQ」时，应使用上述 CLI 或查阅 [agent-tools.md](agent-tools.md) 中的完整参数说明。

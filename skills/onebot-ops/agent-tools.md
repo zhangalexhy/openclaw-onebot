@@ -109,6 +109,48 @@ openclaw onebot upload-file --target user:<QQ号> --file <本地绝对路径> --
 
 ---
 
+## 7. 群管理
+
+**Agent 工具**：`onebot_group_admin`  
+**CLI**：
+
+```bash
+openclaw onebot group-admin --action <action> --group-id <群号> [其他参数]
+```
+
+支持的 action：
+
+| action | 说明 | 必要参数 | 可选参数 |
+|--------|------|---------|---------|
+| `set_group_name` | 修改群名 | `--group-id`, `--name` | |
+| `send_group_notice` | 发群公告 | `--group-id`, `--content` | |
+| `set_group_ban` | 禁言成员 | `--group-id`, `--user-id` | `--duration`（秒，默认 600，0=解除） |
+| `set_group_whole_ban` | 全员禁言 | `--group-id` | `--enable`/`--no-enable` |
+| `set_group_kick` | 踢出成员 | `--group-id`, `--user-id` | `--reject-add-request` |
+| `set_group_admin` | 设置管理员 | `--group-id`, `--user-id` | `--enable`/`--no-enable` |
+| `set_group_card` | 设置名片 | `--group-id`, `--user-id`, `--name` | |
+| `set_group_special_title` | 设置头衔 | `--group-id`, `--user-id`, `--title` | |
+| `set_group_portrait` | 设置群头像 | `--group-id`, `--file` | |
+| `delete_msg` | 撤回消息 | `--message-id` | |
+| `get_group_info` | 获取群信息 | `--group-id` | |
+| `get_group_member_list` | 获取成员列表 | `--group-id` | |
+| `get_group_member_info` | 获取成员信息 | `--group-id`, `--user-id` | |
+
+示例：
+
+```bash
+# 修改群名
+openclaw onebot group-admin --action set_group_name --group-id 123456789 --name "新群名"
+
+# 禁言 10 分钟
+openclaw onebot group-admin --action set_group_ban --group-id 123456789 --user-id 987654321 --duration 600
+
+# 踢人
+openclaw onebot group-admin --action set_group_kick --group-id 123456789 --user-id 987654321
+```
+
+---
+
 ## 使用建议
 
 - **AI / 自动化**：优先使用上述 **CLI 命令**，便于在 Skill 中写明「如何调用」、可复现。

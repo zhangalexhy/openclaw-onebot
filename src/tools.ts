@@ -18,8 +18,19 @@ import {
   getGroupInfo,
   getStrangerInfo,
   getGroupMemberInfo,
+  getGroupMemberList,
   searchGroupMemberByName,
   getAvatarUrl,
+  deleteMsg,
+  setGroupName,
+  sendGroupNotice,
+  setGroupPortrait,
+  setGroupBan,
+  setGroupWholeBan,
+  setGroupKick,
+  setGroupAdmin,
+  setGroupCard,
+  setGroupSpecialTitle,
 } from "./connection.js";
 import { getRenderMarkdownToPlain } from "./config.js";
 import { markdownToPlain } from "./markdown.js";
@@ -36,6 +47,16 @@ export interface OneBotClient {
   getGroupMemberInfo: typeof getGroupMemberInfo;
   searchGroupMemberByName: typeof searchGroupMemberByName;
   getAvatarUrl: typeof getAvatarUrl;
+  setGroupName: typeof setGroupName;
+  sendGroupNotice: typeof sendGroupNotice;
+  setGroupBan: typeof setGroupBan;
+  setGroupWholeBan: typeof setGroupWholeBan;
+  setGroupKick: typeof setGroupKick;
+  setGroupAdmin: typeof setGroupAdmin;
+  setGroupCard: typeof setGroupCard;
+  setGroupSpecialTitle: typeof setGroupSpecialTitle;
+  setGroupPortrait: typeof setGroupPortrait;
+  deleteMsg: typeof deleteMsg;
 }
 
 export const onebotClient: OneBotClient = {
@@ -50,6 +71,16 @@ export const onebotClient: OneBotClient = {
   getGroupMemberInfo,
   searchGroupMemberByName,
   getAvatarUrl,
+  setGroupName,
+  sendGroupNotice,
+  setGroupBan,
+  setGroupWholeBan,
+  setGroupKick,
+  setGroupAdmin,
+  setGroupCard,
+  setGroupSpecialTitle,
+  setGroupPortrait,
+  deleteMsg,
 };
 
 export function registerTools(api: any): void {
@@ -238,6 +269,95 @@ export function registerTools(api: any): void {
         return { content: [{ type: "text", text: lines.join("\n"), metadata: { count: list.length, matches: list } }] };
       } catch (e: any) {
         return { content: [{ type: "text", text: `搜索失败: ${e?.message}` }] };
+      }
+    },
+  });
+
+  api.registerTool({
+    name: "onebot_group_admin",
+    description: "QQ 群管理操作：修改群名、发公告、禁言、踢人、设置管理员等",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: [
+            "set_group_name", "send_group_notice", "set_group_portrait",
+            "set_group_ban", "set_group_whole_ban", "set_group_kick",
+            "set_group_admin", "set_group_card", "set_group_special_title",
+            "delete_msg",
+            "get_group_info", "get_group_member_list", "get_group_member_info",
+          ],
+          description: "要执行的操作",
+        },
+        group_id: { type: "number", description: "群号" },
+        user_id: { type: "number", description: "用户 QQ 号" },
+        duration: { type: "number", description: "禁言时长（秒），默认 600，0=解除禁言" },
+        name: { type: "string", description: "群名（set_group_name 用）" },
+        content: { type: "string", description: "公告内容（send_group_notice 用）" },
+        file: { type: "string", description: "文件路径（set_group_portrait 用）" },
+        card: { type: "string", description: "群名片（set_group_card 用）" },
+        special_title: { type: "string", description: "群头衔（set_group_special_title 用）" },
+        enable: { type: "boolean", description: "启用/禁用标志" },
+        reject_add_request: { type: "boolean", description: "是否拒绝再加群（set_group_kick 用）" },
+        message_id: { type: "number", description: "消息 ID（delete_msg 用）" },
+      },
+      required: ["action"],
+    },
+    async execute(_id: string, params: Record<string, any>) {
+      const w = getWs();
+      if (!w || w.readyState !== WebSocket.OPEN) {
+        return { content: [{ type: "text", text: "OneBot 未连接" }] };
+      }
+      try {
+        switch (params.action) {
+          case "set_group_name":
+            await setGroupName(params.group_id, params.name);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "send_group_notice":
+            await sendGroupNotice(params.group_id, params.content);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_portrait":
+            await setGroupPortrait(params.group_id, params.file);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_ban":
+            await setGroupBan(params.group_id, params.user_id, params.duration ?? 600);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_whole_ban":
+            await setGroupWholeBan(params.group_id, params.enable ?? true);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_kick":
+            await setGroupKick(params.group_id, params.user_id, params.reject_add_request ?? false);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_admin":
+            await setGroupAdmin(params.group_id, params.user_id, params.enable ?? true);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_card":
+            await setGroupCard(params.group_id, params.user_id, params.card);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "set_group_special_title":
+            await setGroupSpecialTitle(params.group_id, params.user_id, params.special_title, params.duration ?? -1);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "delete_msg":
+            await deleteMsg(params.message_id);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true }) }] };
+          case "get_group_info": {
+            const data = await getGroupInfo(params.group_id);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true, data }) }] };
+          }
+          case "get_group_member_list": {
+            const data = await getGroupMemberList(params.group_id);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true, data }) }] };
+          }
+          case "get_group_member_info": {
+            const data = await getGroupMemberInfo(params.group_id, params.user_id);
+            return { content: [{ type: "text", text: JSON.stringify({ ok: true, data }) }] };
+          }
+          default:
+            return { content: [{ type: "text", text: `不支持的 action: ${params.action}` }] };
+        }
+      } catch (e: any) {
+        return { content: [{ type: "text", text: `操作失败: ${e?.message}` }] };
       }
     },
   });

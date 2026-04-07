@@ -790,6 +790,82 @@ export function setWs(socket: WebSocket | null): void {
     }
 }
 
+// ── 群信息管理 ──────────────────────────────────────────
+
+export async function setGroupName(groupId: number, groupName: string): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_name", { group_id: groupId, group_name: groupName });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_name failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function sendGroupNotice(groupId: number, content: string): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "_send_group_notice", { group_id: groupId, content });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot _send_group_notice failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupPortrait(groupId: number, file: string): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_portrait", { group_id: groupId, file });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_portrait failed (retcode=${res?.retcode})`);
+    }
+}
+
+// ── 群成员管理 ──────────────────────────────────────────
+
+export async function setGroupBan(groupId: number, userId: number, duration: number = 600): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_ban", { group_id: groupId, user_id: userId, duration });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_ban failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupWholeBan(groupId: number, enable: boolean = true): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_whole_ban", { group_id: groupId, enable });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_whole_ban failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupKick(groupId: number, userId: number, rejectAddRequest: boolean = false): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_kick", { group_id: groupId, user_id: userId, reject_add_request: rejectAddRequest });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_kick failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupAdmin(groupId: number, userId: number, enable: boolean = true): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_admin", { group_id: groupId, user_id: userId, enable });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_admin failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupCard(groupId: number, userId: number, card: string): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_card", { group_id: groupId, user_id: userId, card });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_card failed (retcode=${res?.retcode})`);
+    }
+}
+
+export async function setGroupSpecialTitle(groupId: number, userId: number, specialTitle: string, duration: number = -1): Promise<void> {
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error("OneBot WebSocket not connected");
+    const res = await sendOneBotAction(ws, "set_group_special_title", { group_id: groupId, user_id: userId, special_title: specialTitle, duration });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot set_group_special_title failed (retcode=${res?.retcode})`);
+    }
+}
+
 export function stopConnection(): void {
     if (ws) {
         ws.close();
