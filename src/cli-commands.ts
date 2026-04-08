@@ -10,6 +10,8 @@ import {
   searchGroupMemberByName,
   uploadGroupFile,
   uploadPrivateFile,
+  sendGroupRecord,
+  sendPrivateRecord,
   setGroupName,
   sendGroupNotice,
   setGroupPortrait,
@@ -154,6 +156,38 @@ export function registerOneBotCli(onebot: any, api: any): void {
         console.log("私聊文件上传成功");
       } else {
         console.error("--target 格式须为 group:<群号> 或 user:<QQ号>");
+        process.exit(1);
+      }
+      cleanupAndExit();
+    });
+
+  onebot
+    .command("send-record")
+    .description("发送语音消息到群或私聊")
+    .requiredOption("--target <t>", "group:<群号> 或 user:<QQ号>")
+    .requiredOption("--file <path>", "语音文件路径（file:// 本地路径、http(s):// URL 或 base64://）")
+    .action(async (opts: any) => {
+      await ensureOneBotConnection();
+      const t = String(opts.target || "").replace(/^onebot:/i, "").trim();
+      const file = String(opts.file || "").trim();
+      if (!file) {
+        console.error("--file 必填");
+        process.exit(1);
+      }
+      const getConfig = () => getOneBotConfig(getApi());
+      try {
+        if (t.startsWith("group:")) {
+          await sendGroupRecord(parseInt(t.slice(6), 10), file, getConfig);
+          console.log("群语音发送成功");
+        } else if (t.startsWith("user:")) {
+          await sendPrivateRecord(parseInt(t.replace(/^user:/, ""), 10), file, getConfig);
+          console.log("私聊语音发送成功");
+        } else {
+          console.error("--target 格式须为 group:<群号> 或 user:<QQ号>");
+          process.exit(1);
+        }
+      } catch (err: any) {
+        console.error(`发送失败: ${err?.message ?? err}`);
         process.exit(1);
       }
       cleanupAndExit();

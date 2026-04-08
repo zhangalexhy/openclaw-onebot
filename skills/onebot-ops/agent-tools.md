@@ -90,7 +90,36 @@ openclaw message send --channel onebot --target user:<QQ号> --media "https://ex
 
 ---
 
-## 5. 上传文件到群/私聊
+## 5. 发送语音
+
+**Agent 工具**：`onebot_send_record`  
+**CLI**：
+
+```bash
+openclaw onebot send-record --target group:<群号> --file "file:///path/to/audio.mp3"
+openclaw onebot send-record --target user:<QQ号> --file "https://example.com/voice.silk"
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--target` | group:<群号> 或 user:<QQ号>（必填） |
+| `--file` | 语音文件，支持 `file://` 本地路径、`http(s)://` URL、`base64://`（必填） |
+
+支持的音频格式：mp3、wav、amr、silk 等（NapCat/Lagrange 会自动转码为 SILK）。
+
+示例：
+
+```bash
+# 发送本地语音到群
+openclaw onebot send-record --target group:123456789 --file "file:///tmp/hello.mp3"
+
+# 发送网络语音到私聊
+openclaw onebot send-record --target user:987654321 --file "https://example.com/voice.silk"
+```
+
+---
+
+## 6. 上传文件到群/私聊
 
 **Agent 工具**：`onebot_upload_file`  
 **CLI**：
@@ -102,14 +131,14 @@ openclaw onebot upload-file --target user:<QQ号> --file <本地绝对路径> --
 
 ---
 
-## 6. 执行脚本（Cron 等）
+## 7. 执行脚本（Cron 等）
 
 **Agent 工具**：`onebot_run_script`  
 **CLI**：无直接一对一命令，可由 Cron 或工作流调用脚本，脚本内使用上述 CLI 或 `onebotClient` API。
 
 ---
 
-## 7. 群管理
+## 8. 群管理
 
 **Agent 工具**：`onebot_group_admin`  
 **CLI**：
@@ -151,7 +180,7 @@ openclaw onebot group-admin --action set_group_kick --group-id 123456789 --user-
 
 ---
 
-## 8. 通用 API 调用（onebot_api）
+## 9. 通用 API 调用（onebot_api）
 
 **Agent 工具**：`onebot_api`
 

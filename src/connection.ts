@@ -466,6 +466,62 @@ export async function sendPrivateImage(
     return mid;
 }
 
+/** 发送群语音消息。record 支持 file:// 本地路径、http(s):// URL、base64:// */
+export async function sendGroupRecord(
+    groupId: number,
+    record: string,
+    getConfig?: () => OneBotAccountConfig | null
+): Promise<number | undefined> {
+    if (shouldBlockSendInForwardMode("group", groupId)) {
+        logSend("connection", "sendGroupRecord", { targetId: groupId, blocked: true, sessionId: getActiveReplyTarget(), replySessionId: getActiveReplySessionId() });
+        return undefined;
+    }
+    logSend("connection", "sendGroupRecord", {
+        targetType: "group",
+        targetId: groupId,
+        recordPreview: record?.slice?.(0, 60),
+        sessionId: getActiveReplyTarget(),
+        replySessionId: getActiveReplySessionId(),
+    });
+    const socket = getConfig ? await ensureConnection(getConfig) : await waitForConnection();
+    const seg = [{ type: "record", data: { file: record } }];
+    const res = await sendOneBotAction(socket, "send_group_msg", { group_id: groupId, message: seg });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot send_group_msg (record) failed (retcode=${res?.retcode})`);
+    }
+    const mid = res?.data?.message_id as number | undefined;
+    logSend("connection", "sendGroupRecord", { targetId: groupId, messageId: mid, sessionId: getActiveReplyTarget(), replySessionId: getActiveReplySessionId() });
+    return mid;
+}
+
+/** 发送私聊语音消息。record 支持 file:// 本地路径、http(s):// URL、base64:// */
+export async function sendPrivateRecord(
+    userId: number,
+    record: string,
+    getConfig?: () => OneBotAccountConfig | null
+): Promise<number | undefined> {
+    if (shouldBlockSendInForwardMode("private", userId)) {
+        logSend("connection", "sendPrivateRecord", { targetId: userId, blocked: true, sessionId: getActiveReplyTarget(), replySessionId: getActiveReplySessionId() });
+        return undefined;
+    }
+    logSend("connection", "sendPrivateRecord", {
+        targetType: "user",
+        targetId: userId,
+        recordPreview: record?.slice?.(0, 60),
+        sessionId: getActiveReplyTarget(),
+        replySessionId: getActiveReplySessionId(),
+    });
+    const socket = getConfig ? await ensureConnection(getConfig) : await waitForConnection();
+    const seg = [{ type: "record", data: { file: record } }];
+    const res = await sendOneBotAction(socket, "send_private_msg", { user_id: userId, message: seg });
+    if (res?.retcode !== 0) {
+        throw new Error(res?.msg ?? `OneBot send_private_msg (record) failed (retcode=${res?.retcode})`);
+    }
+    const mid = res?.data?.message_id as number | undefined;
+    logSend("connection", "sendPrivateRecord", { targetId: userId, messageId: mid, sessionId: getActiveReplyTarget(), replySessionId: getActiveReplySessionId() });
+    return mid;
+}
+
 export async function uploadGroupFile(
     groupId: number,
     file: string,

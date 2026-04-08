@@ -39,6 +39,7 @@ export function logSend(
     nodeCount?: number;
     imagePreview?: string;
     mediaUrlPreview?: string;
+    recordPreview?: string;
     blocked?: boolean;
   }
 ): void {

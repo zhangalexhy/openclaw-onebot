@@ -12,6 +12,8 @@ import {
   sendGroupMsg,
   sendGroupImage,
   sendPrivateImage,
+  sendGroupRecord,
+  sendPrivateRecord,
   uploadGroupFile,
   uploadPrivateFile,
   getGroupMsgHistory,
@@ -43,6 +45,8 @@ export interface OneBotClient {
   sendGroupImage: typeof sendGroupImage;
   sendPrivateMsg: typeof sendPrivateMsg;
   sendPrivateImage: typeof sendPrivateImage;
+  sendGroupRecord: typeof sendGroupRecord;
+  sendPrivateRecord: typeof sendPrivateRecord;
   getGroupMsgHistory: typeof getGroupMsgHistory;
   getGroupMsgHistoryInRange: typeof getGroupMsgHistoryInRange;
   getGroupInfo: typeof getGroupInfo;
@@ -72,6 +76,8 @@ export const onebotClient: OneBotClient = {
   sendGroupImage,
   sendPrivateMsg,
   sendPrivateImage,
+  sendGroupRecord,
+  sendPrivateRecord,
   getGroupMsgHistory,
   getGroupMsgHistoryInRange,
   getGroupInfo,
@@ -151,6 +157,36 @@ export function registerTools(api: any): void {
           await sendPrivateImage(parseInt(t.replace(/^user:/, ""), 10), params.image);
         }
         return { content: [{ type: "text", text: "图片发送成功" }] };
+      } catch (e: any) {
+        return { content: [{ type: "text", text: `发送失败: ${e?.message}` }] };
+      }
+    },
+  });
+
+  api.registerTool({
+    name: "onebot_send_record",
+    description: "通过 OneBot 发送语音消息。target 格式：user:QQ号 或 group:群号。record 为语音文件路径（file:// 本地路径、http(s):// URL 或 base64://）",
+    parameters: {
+      type: "object",
+      properties: {
+        target: { type: "string", description: "user:123456 或 group:789012" },
+        record: { type: "string", description: "语音文件路径或 URL" },
+      },
+      required: ["target", "record"],
+    },
+    async execute(_id: string, params: { target: string; record: string }) {
+      const w = getWs();
+      if (!w || w.readyState !== WebSocket.OPEN) {
+        return { content: [{ type: "text", text: "OneBot 未连接" }] };
+      }
+      const t = params.target.replace(/^onebot:/i, "");
+      try {
+        if (t.startsWith("group:")) {
+          await sendGroupRecord(parseInt(t.slice(6), 10), params.record);
+        } else {
+          await sendPrivateRecord(parseInt(t.replace(/^user:/, ""), 10), params.record);
+        }
+        return { content: [{ type: "text", text: "语音发送成功" }] };
       } catch (e: any) {
         return { content: [{ type: "text", text: `发送失败: ${e?.message}` }] };
       }

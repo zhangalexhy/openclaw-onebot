@@ -48,9 +48,28 @@ openclaw onebot upload-file --target group:123456789 --file /home/user/document.
 openclaw onebot upload-file --target user:987654321 --file /tmp/report.xlsx --name "月度报表.xlsx"
 ```
 
+## 发送语音
+
+通过 `openclaw onebot send-record` 发送语音消息：
+
+```bash
+openclaw onebot send-record --target group:<群号> --file <语音文件>
+openclaw onebot send-record --target user:<QQ号> --file <语音文件>
+```
+
+`--file` 支持 `file://` 本地路径、`http(s)://` URL、`base64://`。音频格式支持 mp3、wav、amr、silk 等（NapCat/Lagrange 会自动转码）。
+
+示例：
+
+```bash
+openclaw onebot send-record --target group:123456789 --file "file:///tmp/hello.mp3"
+openclaw onebot send-record --target user:987654321 --file "https://example.com/voice.silk"
+```
+
 ## 说明
 
 - **回复场景**（用户发消息 → Agent 回复）：由 deliver 自动处理，Agent 输出 text/mediaUrl 即会送达
 - **主动发送**（CLI 或工作流）：使用上述 `openclaw message send` 命令
 - **文件上传**：使用 `openclaw onebot upload-file`，适合发送文档等非图片文件
+- **语音发送**：使用 `openclaw onebot send-record`，支持 mp3/wav/amr/silk 等格式
 - 无 Agent 工具挂载，减少 token 消耗，提升扩展性
