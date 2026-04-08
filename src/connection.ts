@@ -485,7 +485,7 @@ export async function sendGroupRecord(
     });
     const socket = getConfig ? await ensureConnection(getConfig) : await waitForConnection();
     const seg = [{ type: "record", data: { file: record } }];
-    const res = await sendOneBotAction(socket, "send_group_msg", { group_id: groupId, message: seg });
+    const res = await sendOneBotAction(socket, "send_group_msg", { group_id: groupId, message: seg }, getLogger(), 60000);
     if (res?.retcode !== 0) {
         throw new Error(res?.msg ?? `OneBot send_group_msg (record) failed (retcode=${res?.retcode})`);
     }
@@ -513,7 +513,7 @@ export async function sendPrivateRecord(
     });
     const socket = getConfig ? await ensureConnection(getConfig) : await waitForConnection();
     const seg = [{ type: "record", data: { file: record } }];
-    const res = await sendOneBotAction(socket, "send_private_msg", { user_id: userId, message: seg });
+    const res = await sendOneBotAction(socket, "send_private_msg", { user_id: userId, message: seg }, getLogger(), 60000);
     if (res?.retcode !== 0) {
         throw new Error(res?.msg ?? `OneBot send_private_msg (record) failed (retcode=${res?.retcode})`);
     }
