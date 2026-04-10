@@ -25,6 +25,8 @@ import {
   getGroupInfo,
   getGroupMemberList,
   getGroupMemberInfo,
+  sendOneBotAction,
+  getWs,
   stopConnection,
   stopImageTempCleanup,
 } from "./connection.js";
@@ -106,7 +108,6 @@ export function registerOneBotCli(onebot: any, api: any): void {
         return `[${new Date(m.time * 1000).toISOString()}] ${nick}: ${text.slice(0, 200)}`;
       });
       console.log(lines.join("\n") || "无历史消息");
-      cleanupAndExit();
       cleanupAndExit();
     });
 
@@ -289,6 +290,42 @@ export function registerOneBotCli(onebot: any, api: any): void {
         cleanupAndExit();
       } catch (err: any) {
         console.error(`错误: ${err?.message ?? err}`);
+        process.exit(1);
+      }
+    });
+
+  onebot
+    .command("api")
+    .description("通用 OneBot API 调用，可调用任意 OneBot/NapCat API")
+    .requiredOption("--action <action>", "API 端点名称，如 get_group_list、set_essence_msg")
+    .option("--params <json>", "API 参数，JSON 字符串", "{}")
+    .option("--timeout <ms>", "超时毫秒数", "15000")
+    .action(async (opts: any) => {
+      await ensureOneBotConnection();
+      const action = String(opts.action || "").trim();
+      if (!action) {
+        console.error("--action 不能为空");
+        process.exit(1);
+      }
+      let params: Record<string, unknown>;
+      try {
+        params = JSON.parse(String(opts.params || "{}"));
+      } catch {
+        console.error("--params 不是合法的 JSON");
+        process.exit(1);
+      }
+      const timeoutMs = parseInt(String(opts.timeout || "15000"), 10) || 15000;
+      const socket = getWs();
+      if (!socket) {
+        console.error("WebSocket 未连接");
+        process.exit(1);
+      }
+      try {
+        const result = await sendOneBotAction(socket, action, params, undefined, timeoutMs);
+        console.log(JSON.stringify(result, null, 2));
+        cleanupAndExit();
+      } catch (err: any) {
+        console.error(`调用失败: ${err?.message ?? err}`);
         process.exit(1);
       }
     });

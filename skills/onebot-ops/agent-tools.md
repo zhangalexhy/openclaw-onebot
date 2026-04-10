@@ -182,29 +182,40 @@ openclaw onebot group-admin --action set_group_kick --group-id 123456789 --user-
 
 ## 9. 通用 API 调用（onebot_api）
 
-**Agent 工具**：`onebot_api`
+**Agent 工具**：`onebot_api`  
+**CLI**：
 
-直接调用任意 OneBot/NapCat API，无需逐个封装。传入 `action`（API 端点名）和 `params`（参数对象），返回完整 JSON 响应。
+```bash
+openclaw onebot api --action <API名称> [--params '<JSON参数>'] [--timeout <毫秒>]
+```
+
+直接调用任意 OneBot/NapCat API，无需逐个封装。传入 `action`（API 端点名）和 `params`（参数 JSON），返回完整 JSON 响应。
 
 适用于上述专用工具未覆盖的 API（如群相册、精华消息、群文件管理、戳一戳、AI 语音等）。
 
 | 参数 | 说明 |
 |------|------|
-| `action` | OneBot API 名称，如 `get_group_list`、`set_essence_msg` |
-| `params` | API 参数对象，字段与 OneBot 协议文档一致 |
-| `timeout` | 可选，超时毫秒数，默认 15000 |
+| `--action` | OneBot API 名称，如 `get_group_list`、`set_essence_msg`（必填） |
+| `--params` | API 参数，JSON 字符串，默认 `{}`（可选） |
+| `--timeout` | 超时毫秒数，默认 15000（可选） |
 
 示例：
 
-```json
-// 获取群精华消息
-{ "action": "get_essence_msg_list", "params": { "group_id": 123456 } }
+```bash
+# 获取群列表
+openclaw onebot api --action get_group_list
 
-// 群戳一戳
-{ "action": "group_poke", "params": { "user_id": 789012 } }
+# 获取群精华消息
+openclaw onebot api --action get_essence_msg_list --params '{"group_id": 123456}'
 
-// 获取群文件列表
-{ "action": "get_group_root_files", "params": { "group_id": 123456 } }
+# 群戳一戳
+openclaw onebot api --action group_poke --params '{"group_id": 123456, "user_id": 789012}'
+
+# 获取群文件列表
+openclaw onebot api --action get_group_root_files --params '{"group_id": 123456}'
+
+# 设置精华消息（带超时）
+openclaw onebot api --action set_essence_msg --params '{"message_id": 12345}' --timeout 30000
 ```
 
 完整 API 列表参考：[napcat-api-reference.md](napcat-api-reference.md)
